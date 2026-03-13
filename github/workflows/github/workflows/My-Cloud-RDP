@@ -1,0 +1,28 @@
+name: Windows-RDP-Streamer
+on: workflow_dispatch # هذا يسمح لك بتشغيل السيرفر يدوياً
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Prepare RDP User
+        run: |
+          # إنشاء مستخدم جديد وكلمة مرور
+          $Password = "Streamer2026!"
+          $User = "RunnerAdmin"
+          net user $User $Password /add
+          net localgroup Administrators $User /add
+          net localgroup "Remote Desktop Users" $User /add
+          
+      - name: Enable Remote Desktop
+        run: |
+          # تفعيل خاصية سطح المكتب البعيد في الويندوز
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
+          
+      - name: Connect to Serveo
+        run: |
+          # فتح النفق وتوليد رابط الاتصال
+          Write-Host "Connecting to Serveo... Please wait for the link."
+          ssh -o StrictHostKeyChecking=no -R 80:localhost:3389 serveo.net
